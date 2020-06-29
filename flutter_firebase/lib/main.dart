@@ -61,7 +61,28 @@ class _MyHomePageState extends State<MyHomePage> {
         child: ListTile(
           title: Text(record.name),
           trailing: Text(record.votes.toString()),
-          onTap: () => record.reference.updateData({'votes': FieldValue.increment(1)}),
+          // From https://codelabs.developers.google.com/codelabs/flutter-firebase/#10 :
+          //
+          // By wrapping the read and write operations in one transaction, you're telling
+          // Cloud Firestore to only commit a change if there was no external change to
+          // the underlying data while the transaction was running.
+          // If two users aren't concurrently voting on that particular name, the
+          // transaction runs exactly once. But if the number of votes changes between
+          // the transaction.get(...) and the transaction.update(...) calls, the current
+          // run isn't committed, and the transaction is retried. After 5 failed retries,
+          // the transaction fails.
+          //
+          // Note: There is another way to solve this problem without using a transaction.
+          // In general terms, you would use a stream containing each individual vote.
+          // Each vote would be represented by the number 1. The current displayed value
+          // for votes would then be the sum of the values in the stream. In Firebase,
+          // you could (for example) use a collection to hold the votes and an aggregation
+          // query to sum them.
+          onTap: () => Firestore.instance.runTransaction((transaction) async {
+            final freshSnapshot = await transaction.get(record.reference);
+            final fresh = Record.fromSnapshot(freshSnapshot);
+            await transaction.update(record.reference, {'votes': fresh.votes + 1});
+          }),
         ),
       ),
     );
