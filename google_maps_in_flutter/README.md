@@ -2,6 +2,8 @@
 
 https://codelabs.developers.google.com/codelabs/google-maps-in-flutter
 
+**If the app fails to run, make sure the API key is still valid. See [AppDelegate.swift](ios/Runner/AppDelegate.swift).**
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
